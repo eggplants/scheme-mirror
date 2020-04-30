@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>S式とconsセル</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<PRE><A HREF="eval-quote.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A HREF="listproc.html">[Next]</A></PRE>
+
+<HR>
+
+<div class="main">
+
+<h2>S式とconsセル</h2>
+<p>
+Lispでデータ構造(システムでのデータの内部表現)のための記法として，S式
+(symbolic expression)がある．Lispの方言の一つであるSchemeのデータ構造も
+これに従っており，<A HREF="datatype.html#deflist">リスト</A>の内部表現
+(システム内部でのリストの実現方法)とも密接な関係がある．ここでは，S式の
+定義とリストの内部表現に用いられるconsセルについて説明する．
+</p>
+
+<h2><A NAME="def-s-exp">S式の定義</A></h2>
+<p>
+<OL>
+<LI> アトムはS式である
+<LI> S1,S2がS式であるとき，<A NAME="dottedpair">ドット対</A>(S1 . S2)はS式である．
+</OL>
+アトムとは，記号，真偽値，数値，文字列，文字といったドット対以外の<A HREF="datatype.html#simple">単純データ</A>，および空リストである．
+空リストとは中身のないリスト=(&nbsp;)である．
+</p>
+<p>
+ドット対(S1 . S2)のS1を<B>car</B>部，S2を<B>cdr</B>部と呼ぶ．
+ここで，S1,S2は再びS式，つまりアトムまたはドット対であり，S式は再帰的なデータ構造を表現している．
+以下は，全てS式である．
+<PRE>
+	()
+	1
+	a
+	(#t . #f)
+	((a . (b . ())) . ())	
+	("x" . (square . ((100 . (if . ())) . (#\newline . ()))))
+	(() . ())
+</PRE>
+ここで，
+<PRE>
+	(a . (b . ()))
+</PRE>
+というS式を詳しく調べると，
+<PRE>
+	car部	記号a(これもS式)
+	cdr部	(b . ( ))というS式
+</PRE>
+であり，さらにcdr部のS式(b . ( ))は，
+<PRE>
+	car部	記号b(これもS式)
+	cdr部	空リスト(これもS式)
+</PRE>
+という形になっている．
+</p>
+<p>
+<A HREF="datatype.html#deflist">リスト</A>表現は，ドット対で表現されるデー
+タ構造を読みやすいように省略して表したものである．形式的には，『. (』に
+対応する『)』があるとき，それらを省略することができる．以下の2つの式は同
+一のデータ構造を表す．	
+<PRE>
+	(S1 . (S2 . (S3 … (S<I>n</I> . ()))))
+	(S1 S2 S3 … S<I>n</I>)
+</PRE>
+このリスト表現と元のS式との対応は，<A HREF="#conscell">consセル</A>を用いた表現を使うと分かりやすい．
+</p>
+<p>
+実際，システムに対してS式をドット対の形式を用いて入力すると，それに対応するリスト表現を返す．
+<PRE>
+	&gt; '(a . (b . (c . ())))
+	(a b c)
+	&gt; '((a . (b . ())) . (c . (d . ())))
+	((a b) c d)
+</PRE>
+cdr部が( )でないときには，“.”は省略できない．
+たとえば，
+<pre>
+	(S1 . (S2 . S3))
+</pre>
+は，リスト表現では，
+<pre>
+	(S1 S2 . S3)
+</pre>
+となる．
+このようなものを，<a name="dotlist">ドットリスト</a>といって，通常のリスト(cdr部が空リスト)と区別することもある．
+</p>
+
+<H3><A NAME="conscell">consセル</A></H3>
+<p>
+Schemeのシステム内部では，リストデータはconsセルを使って表現されている．
+consセルの構造はドット対そのもので表され，car部とcdr部の2つのフィールド
+から成る．
+<div align=center>
+<IMG SRC="images/cell-def.gif">
+</div>
+car部，cdr部に入っているS式は矢印で指し示される．
+次の図は，(a . (b . (c . ( ))))というS式，すなわち(a b c)というリストを表している．
+<div align=center>
+<IMG SRC="images/cell2.gif"><br>
+</div>
+これは，次のように描かれることも多い．
+<div align=center>
+<IMG SRC="images/cell3.gif">
+</div>
+つまりS式のリスト表現は，繋がっているconsセルのcar部に入っているデータを順に並べたものに対応することが分かる．
+ドット対以外のアトム(記号，真偽値，数値など)もある種のセルに格納される．
+</p>
+</div>
+
+<HR>
+<PRE><A HREF="eval-quote.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A HREF="listproc.html">[Next]</A></PRE>
+
+<hr>
+<div class="footer">
+
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:15:59 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+
+</BODY>
+</HTML>

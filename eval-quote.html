@@ -1,0 +1,192 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>フォーム・評価・クォート</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<PRE><A href="datatype.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="s-expression.html">[Next]</A></PRE>
+<HR>
+
+<div class="main">
+
+<h2>フォームと評価</h2>
+<p>
+Schemeシステムにフォーム(データで表現される式)が与えられると，システムはフォームを「評価」して，その値を返す．
+</p>
+<P>
+変数が評価されると，その変数の値が返される．
+<PRE>
+	&gt; (define x -1)
+	x
+	&gt; x
+	-1
+</PRE>
+関数にその引数を与えて評価すると，まず各引数が評価され，最後に関数の値が返る．
+引数が複数あるときの評価の順番は，処理系に依存する．
+<PRE>
+	&gt; (* (+ 1 2) (+ 3 (* 4 5)))
+	;;(* 3 (+ 3 (* 4 5)))
+	;;(* 3 (+ 3 20))
+	;;(* 3 23)
+	69
+</PRE>
+define(変数，関数の定義), set!(変数への代入)などは関数の形をしているが，その引数の全てが評価されるとは限らない．
+例えば，
+<PRE>
+	&gt; (define x 4)
+	&gt; (set! x 5)
+</PRE>
+において，第一引数にあたる"x"の値は評価されない．
+この他にこのような特殊なフォームとして，
+<PRE>
+	and or if cond let lambda do quote
+</PRE>
+などがある．
+</P>
+<P>
+リストの第一要素は，常に関数あるいは特殊なフォームとして解釈されるので注意が必要である．
+例えば，数値リストを引数として，その要素の総和を返す関数sum-of-listがあったとする．
+例えば(1 2 3 4)に対しては，要素の合計10を返して欲しい．
+ところが，以下のように入力すると，
+<PRE>
+	&gt; (sum-of-list (1 2 3 4))
+	==&gt; <I>error</I>: 1 is not a function
+</PRE>
+とエラーになってしまう．これは，
+<PRE>
+	(sum-of-list (1 2 3 4))
+</PRE>
+という式において引数のリスト(1 2 3 4)が評価される際に，その第一要素の『1』が関数であり，(2 3 4)を引数として呼び出されていると解釈されてしまうためである．
+これを防ぐには，すぐあとで説明する<A HREF="#quote">クォート</A>を用いて引数をそのまま関数に渡すようにする必要がある．
+<PRE>
+	&gt; (sum-of-list (quote (1 2 3 4)))
+	10
+</PRE>
+</P>
+<P>
+ちなみにsum-of-listは，以下のように定義できる．
+詳細については，<A HREF="recursive.html">再帰呼出し</A>，および<A HREF="listproc.html">リスト処理関数</A>を参照のこと．
+<PRE>
+	(define (sum-of-list l)
+	  (if (null? l)
+	      0
+	      (+ (car l) (sum-of-list (cdr l)))))
+</PRE>
+</P>
+<p>
+記号は<A HREF="#quote">クォート</A>しない限り，その記号名に対応する変数，関数，あるいは特殊なフォームとして扱われる．
+システムに定義されていない記号の値を評価するとエラーとなる．
+<PRE>
+	&gt; (define abc 1)
+	abc
+	&gt; abc
+	1
+	&gt; +
+	#&lt;function +&gt;
+	&gt; no-such-symbol
+	==&gt; <I>error</I> : unbound variable: no-such-symbol
+</PRE>
+</p>
+
+<h2><A NAME="quote">クォート</A></h2>
+<p>
+上で挙げたように，quoteは特殊なフォームの一つであり，
+<PRE>
+	(quote データ)
+</PRE>
+は，“データ”をそのまま返す(記号はその<A HREF="datatype.html#external-rep">印字名</A>で返される)．
+<PRE>
+	&gt; (define x 2)
+	x
+	&gt; x
+	2
+	&gt; (quote x)
+	x
+	&gt; (quote X)
+	x
+	&gt; (quote (IF (= x 1) Y Z))
+	(if (= x 1) y z)
+</PRE>
+quoteは頻繁に用いられるため，<FONT SIZE=+2 COLOR=#0000ff>'</FONT>(シングルクォート)で省略される．
+すなわち (quote x) = 'x
+<PRE>
+	&gt; (define y 'x)
+	y
+	&gt; y
+	x
+	&gt; '(a b c)
+	(a b c)
+	&gt; '(+ 1 2 3)
+	(+ 1 2 3)
+	&gt; ''x
+	'x
+</PRE>
+</p>
+<p>
+シングルクォート<FONT SIZE=+2 COLOR=#0000ff>'</FONT>は，バッククォート<FONT SIZE=+2 COLOR=#0000ff>`</FONT>と間違いやすいので気をつけること．
+Schemeでは，バッククォートは特殊なフォームquasiquoteの省略記法として用いられるが，本文書ではquasiquoteは扱わないことにする．
+</p>
+
+<h2>eval</h2>
+<p>
+evalは，与えられたデータの値を評価する(evaluate)関数である．
+<pre>
+	&gt; (eval 100)
+	100
+	&gt; (define x '(+ 1 2 3))
+	x
+	&gt; x
+	(+ 1 2 3)
+	&gt; (eval x)
+	6
+	&gt; (define y 'x)
+	y
+	&gt; y
+	x
+	&gt; (eval y)
+	(+ 1 2 3)
+	&gt; (eval (eval y))
+	6	
+	&gt; (define z '(1 2 3 4))
+	y
+	;; consについては，<A HREF="listproc.html#cons">ここ</A>を参照のこと．
+
+	&gt; (eval (cons '+ z)) ;; (+ 1 2 3 4)を評価する
+	10
+	&gt; (eval (cons '* z)) ;; (* 1 2 3 4)を評価する
+	24
+</pre>
+</p>
+<h3>注</h3>
+<p>
+多くのScheme処理系では，evalはこのように1引数関数として実装されている．
+しかし，現在のSchemeの仕様書である<a
+href="http://www.sci.toyama-u.ac.jp/%7Eiwao/Scheme/r5rsj/html/r5rsj_toc.html">
+『Revised<sup>5</sup>Report on the Algorithmic Language Scheme』</a>では，
+<a href="http://www.sci.toyama-u.ac.jp/%7Eiwao/Scheme/r5rsj/html/r5rsj.html#SEC66">eval</a>が2引数の関数と定義されており，第2引数として環境記述子
+(environment-specifier)を与えることになっている．
+</p>
+</div>
+
+<HR>
+
+<PRE><A href="datatype.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="s-expression.html">[Next]</A></PRE>
+
+<div class="footer">
+
+<hr>
+
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:15:32 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+
+</BODY>
+</HTML>

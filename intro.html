@@ -1,0 +1,102 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>はじめのいっぽ</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</HEAD>
+<body>
+
+<PRE>[Prev]    <A href="scheme.html">[ Up ]</A>    <A href="func-var.html">[Next]</A></PRE>
+<HR>
+
+<h1>はじめのいっぽ</h1>
+
+<div class="main">
+<p>
+Schemeのインタプリタ(システム)が起動されると，プロンプト(入力を促すマー
+ク)を表示して，ユーザからの入力を待つ状態になる．このプロンプトが出てい
+る状態をトップレベルと呼ぶ．トップレベルにおいて，キーボードから式を入力
+し，最後に入力の終わりとして「改行」キーを入れると，システムは入力された
+式をすぐに計算(評価)して，結果として得られた値を返し(表示し)，再びトップ
+レベルに戻り，入力を待つ状態になる．
+<pre>
+	&gt -78
+	-78
+	&gt (+ 2 1)
+	3
+	&gt (* 2 3 4)
+	24
+</pre>
+ここに書かれているように，Schemeの式は括弧を使って表現される．括弧の中の
+まず最初に演算記号があり，それに続いて演算データが並べられる．このような
+記法を前置記法という．演算データがまた別の式になっていてもよい．
+<pre>
+	&gt (* 2 (+ 1 4 5) (/ 12 3))
+	80
+</pre>
+</p>
+
+<h3>ファイルのロード</h3>
+<p>
+<pre>
+	&gt (load "filename.scm")
+</pre>
+を実行することにより，キーボードから直接入力する代りに，filename.scmに書
+かれている全ての式を評価させることができる．ロードが終了するとプロンプト
+が表示され，入力待ちになる．大きなプログラムを，毎回キーボードからタイプ
+する必要はない．
+</p>
+
+<h3>コメント</h3>
+<p>
+ファイルの中に，<FONT COLOR=#0000ff SIZE=+2>;</FONT>(セミコロン)があると，
+それ以降，その行の終わりまではコメントとみなされ，評価されない．
+<pre>
+        ; 関数f(x,y) = x + yの定義
+        (define (f x y) (+ x y))
+
+        ; 関数g(x,y,z) = (x+y)(y+z)(z+x)の定義
+        (define (g x y z) ; 行の途中からでもコメントを書くこともできる．
+          (* (+ x y)      ;; 関数については<A HREF="func-var.html">ここ</A>を参照のこと．
+             (+ y z)
+             (+ z x)))
+
+</pre>
+</p>
+
+<h3>空白</h3>
+<p>
+Schemeにおいて，空白は重要な意味を持つ
+<PRE>
+	&gt; (+ 2 1)
+	3
+	&gt; (+2 1)
+	==&gt; <I>error</I> ;; +2が1を引数とした<A HREF="func-var.html">関数</A>の名前であると解釈される．
+</PRE>
+タブ，改行も空白文字である．式の途中の改行は無視される．
+<PRE>
+	&gt; (+ 2
+	1)
+	3
+</PRE>
+</p>
+</div>
+
+<HR>
+<PRE>[Prev]    <A href="scheme.html">[ Up ]</A>    <A href="func-var.html">[Next]</A></PRE>
+
+<div class="footer">
+<hr>
+		
+<DIV align="right">
+1998-2001 CopyLeft 日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:09:20 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+
+</BODY>
+</HTML>

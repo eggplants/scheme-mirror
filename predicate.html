@@ -1,0 +1,68 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>述語</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<PRE>[Prev]    <A href="conditionals.html">[ Up ]</A>    [Next]</PRE>
+<HR>
+
+<div class="main">
+
+<h2>述語</h2>
+<p>
+条件の真偽を判定するような式を，述語(predicate)という．<A HREF="conditionals.html">条件式</A>では，偽(#f)以外の値を真と扱う．よっ
+て，あらゆる式を条件判定に用いることが可能ではあるが，述語といった
+ときは，通常，真偽値を返す関数とそれらを<B>and,or,not</B>で組み合わせた式を指す．
+</p>
+<p>
+<DL>
+<DT> 数値に関する述語
+<DD> =, &lt;, &gt;, &lt;=, &gt;=, zero?, positive?, negative?, odd?, even? ...
+<DT> データ型に関する述語
+<DD> boolean?, char?, string?, symbol?, list?, pair?, null? ...
+<DT> 様々なデータの等価性を判定するための述語
+<DD> eq?, eqv? equal? 
+<DT> その他比較のための述語
+<DD> string&lt;?, string&gt;?, char&lt;?, char&lt;=? ...
+</DL>
+eq?,eqv?,equal?では，等しいと判定される判断基準が異なる．
+<UL>
+<LI> eq?は，比較する2つの引数がシステム内部で同一のデータ(セル)を指し示している場合に#tを返す．
+<LI> eqv?は，eq?で等しいか数値として等しい2つの引数が与えられたとき#tを返す．
+<LI> equal?は，評価した結果が等しいような2つの引数が与えられたとき#tを返す．
+<LI> eq?で等しいと判定されるデータは，eqv?,equal?でも等しい．
+<LI> eqv?で等しいと判定されるデータは，equal?でも等しい．
+<LI> equal?で等しいと判定されるデータがeqv?,eq?で等しいとは限らない．
+<LI> eqv?で等しいと判定されるデータがeq?で等しいとは限らない．
+<LI> equal?は汎用的．eq?は高速．
+</UL>
+直観的には，
+<UL>
+<LI> symbolの比較には，eq?
+<LI> symbolと数値を同時に扱う場合は，eqv?(数値のみを扱う場合は，"="の方がよい)
+<LI> listの構造の比較には，equal?
+</UL>
+を使う．
+</p>
+
+</div>
+<HR>
+<PRE>[Prev]    <A href="conditionals.html">[ Up ]</A>    [Next]</PRE>
+
+<div class="footer">
+
+<HR>
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:18:35 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+</BODY>
+</HTML>

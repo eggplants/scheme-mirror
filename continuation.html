@@ -1,0 +1,303 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>継続</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<pre><a href="environment.html">[Prev]</a>    <a href="scheme.html">[ Up ]</a>    <a href="misc.html">[Next]</a></pre>
+<hr>
+
+<div class="main">
+
+<h2>継続</h2>
+<p>
+継続(continuation)とは，式を評価している途中のある時点で，『いま得られた
+値を使って，この後は何を計算するのか』を表すものである．たとえば，Scheme
+の関数呼びだしの式を評価する際には，まず関数とその引数を評価して，その
+後で関数に引数を適用する．
+<pre>
+	==&gt; (+ (* 1 2) (* 3 4))
+	;; ==&gt; (+ 2 12)
+	;; ==&gt; 14
+	14
+</pre>
+この式の場合，まず「+」,「(*&nbsp;1&nbsp;2)」,「(*&nbsp;3&nbsp;4)」を評
+価したのち，「(+&nbsp;2&nbsp;12)」を評価する．
+各部分式の評価が左から右へ進むものとすると，
+たとえば，「(*&nbsp;3&nbsp;4)」を評価した後にするべき計算，つまり継続は，
+<pre>
+        『いま得られた値に2を加える』
+</pre>
+である．この式の評価を完了するためには，
+Schemeのシステムは，この継続を知っていなければならない．
+継続は，「何を評価して，その値によって次には何を行う」というように，どう
+いう手順で計算を進めるか，つまりプログラムの実行順序を制御する概念であり，
+Schemeに限らず，どのプログラミング言語にも欠かせないものである．
+しかし，通常，プログラマは継続を意識することはない．
+</p>
+<p>
+Schemeでは，継続は単なる概念ではない．
+Schemeでは，継続をデータとして生成し，明示的に取り扱うことができる．
+継続を利用することによって，さまざまな実行順序制御が可能になる．
+これは，Schemeの大きな特徴の一つである．
+他の大多数のプログラミング言語では，プログラマが継続を取り扱うことはでき
+ない．
+</p>
+<p>
+Schemeでは，継続は1引数関数として実現される．たとえば，上の例の場合の
+継続
+<pre>
+       『いま得られた値に2を加える』
+</pre>
+は，ある値に2を加える関数
+<pre>
+	(lambda (x) (+ 2 x))
+</pre>
+と表現できる．この関数に(*&nbsp;3&nbsp;4)を引数として与えれば，
+<pre>
+	==&gt; ((lambda (x) (+ 2 x)) (* 3 4))
+	14
+</pre>
+のように，
+<pre>
+	(+ (* 1 2) (* 3 4))
+</pre>
+を評価したのと同じ値が得られる．
+</p>
+<p>
+継続の生成には，関数<B>call-with-current-continuation</B>を用いる．
+この長い名前の省略形として<B>call/cc</B>が用意されている処理系も多い．
+なお，scmでは，call/ccは定義されていないので，
+<pre>
+        (define call/cc call-with-current-continuation)
+</pre>
+としておくとよい．
+call-with-current-continuation(以下，call/cc)は，1引数関数funcを引数とする．
+<pre>
+	(call/cc func)
+</pre>
+call/ccが呼び出されると，その時点での継続が生成され，その継続を引数とし
+て関数funcが実行される．
+以下，関数呼び出しの評価は，まず関数を評価，続いて引数を左から順に評価
+して，最後に関数に引数を適用する，というように行うものとする．
+<pre>
+	==&gt; (+ (* 1 2) (call/cc (lambda (c) (* 3 4))))
+	14
+</pre>
+この例では，call/ccによって，『値に2を加える』という継続が生成され，
+この継続が，関数
+<pre>
+	(lambda (c) (* 3 4))
+</pre>
+の引数cに渡される．ただし，この関数の中では，継続cを呼び出していない．この場合は，この関数を評価した結果が，そのままcall/ccの値となる．したがって，
+<pre>
+	==&gt; (+ (* 1 2) (call/cc (lambda (c) (* 3 4))))
+	14
+</pre>
+という結果となる．
+一方
+<pre>
+	==&gt; (+ (* 1 2) (call/cc (lambda (c) (* 3 (c 4)))))
+	6
+</pre>
+のように，call/ccで呼び出した関数において，継続を呼び出すと，
+関数の実行を直ちに終了して，継続への引数をcall/ccの値として，継続を実行
+する．
+</p>
+<p>
+継続は関数として実現されるので，いったん生成した継続に名前をつければ，
+それをいつでも呼び出すことができる．
+<pre>
+	==&gt; (define cont #f) ;; 大域変数contを定義する(#fは適当な値)
+	cont
+	==&gt; (+ (* 1 2) (call/cc (lambda (c) (set! cont c) (* 3 4))))
+	14
+</pre>
+この例では，call/ccによって，『値に2を加える』という継続が生成される．
+この継続が関数
+<pre>
+	(lambda (c) (set! cont c) (* 3 4))
+</pre>
+の引数cに渡される．
+この関数では大域変数contにcを代入している．
+cを呼び出してはいないので，この関数の値がcall/ccの値になる．
+生成された継続が大域変数contにバインドされているので，contを呼び出せば生
+成した継続を実行することができる．継続は『値に2を加える』であったので
+<pre>
+	==&gt; (cont 2)
+	4
+	==&gt; (cont 5)
+	7
+</pre>
+などのようになる．
+また別の例を挙げる．
+<pre>
+        ==&gt; (define x 0)
+        ==&gt; (define y 2)
+        ==&gt; (define cont #f)
+        ==&gt; (list x (call/cc (lambda (c) (set! cont c) 1)) y)
+	(0 1 2)
+        ==&gt; (cont 3)
+	(0 3 2)
+        ==&gt; (set! x 4)
+        ==&gt; (cont 3)
+	(0 3 2)
+        ==&gt; (set! y 6)
+        ==&gt; (cont 3)
+	(0 3 6)
+</pre>
+この例でcall/ccによって生成される継続は，
+『0，いま得られた値，yを評価した値からなるリストを生成する』
+となる．
+</p>
+<p>
+継続を利用した実用的な例の一つとして，<b>大域脱出</b>が挙げられる．
+たとえば，関数が再帰的に呼び出されているとき，通常，呼び出された関数は，呼び出した側へ
+値を順番に返していく．
+<pre>
+       ;; リストの要素の積を求める関数(call/ccは利用していない)
+        ==&gt; (define (mul x) 
+	;; displayとnewlineは途中経過を表示するためのもので
+	;; 計算に必要なものではない．
+	;; また再帰呼び出し終了後の状態をあわせて表示するために
+	;; let式を用いている．
+	  (<a href="misc.html#display">display</a> x)
+	  (<a href="misc.html#newline">newline</a>)
+	  (let ((result
+	    (if (null? x)
+	        1
+		(* (car x) (mul (cdr x))))))
+	    (display (list x result))
+	    (newline)
+	    result))
+        ==&gt; (mul '(1 2 3 4))
+	(1 2 3 4)
+	(2 3 4)
+	(3 4)
+	(4)
+	()
+	(() 1)
+	((4) 4)
+	((3 4) 12)
+	((2 3 4) 24)
+	((1 2 3 4) 24)
+	24
+	;; 0を含むリストの場合，0が現れたら，その後は計算する必要はないが，
+        ;; この関数では逐一計算を行う．
+        ==&gt; (mul '(1 0 3 4))
+	(1 0 3 4)
+	(0 3 4)
+	(3 4)
+	(4)
+	()
+	(() 1)
+	((4) 4)
+	((3 4) 12)
+	((0 3 4) 0)
+	((1 0 3 4) 0)
+	0
+</pre>
+このような関数の再帰的な呼び出しの関係を順番にたどることな
+く，関数の呼び出し関係を一気に遡って，途中の処理をスキップして処理を
+再開することを大域脱出という．大域脱出は例外処理に用いられる．
+<pre>
+       ;; リストの要素の積を求める関数(call/ccを利用する)
+        ==&gt; (define (mul-cont x)
+	  (call/cc (lambda (escape) 
+	     (letrec ((mul-aux (lambda (y)
+	                        (display y)
+				(newline)
+				(let ((result
+    				       (cond ((null? y) 1)
+				             ((= (car y) 0) (escape 0))
+					     (#t (* (car y) (mul-aux (cdr y)))))))
+			           (display (list y result))
+				   (newline)
+				   result)
+				 )))
+	       (mul-aux x)))))
+        ==&gt; (mul-cont '(1 2 3 4))
+       (1 2 3 4)
+       (2 3 4)
+       (3 4)
+       (4)
+       ()
+       (() 1)
+       ((4) 4)
+       ((3 4) 12)
+       ((2 3 4) 24)
+       ((1 2 3 4) 24)
+       24
+       ==&gt; (mul-cont '(1 0 3 4))
+       (1 0 3 4)
+       (0 3 4) ;; carが0のときに継続を呼び出して大域脱出する．
+       0
+</pre>
+同様の例を挙げる．
+<pre>
+        ;; sumup
+	;; 引数のリストの要素が全て数値であれば，それらの和を返す．
+	;; そうでないものがあれば，そのような要素のうち最初のものを返す．
+	==&gt; (define (sumup x)
+	    (call/cc (lambda (cont) 
+		       (letrec ((sum-aux (lambda (y)
+					   (cond ((null? y) 0)
+					         ((not (number? (car y))) (cont (car y)))
+					         (#t (+ (car y) (sum-aux (cdr y))))))))
+		         (sum-aux x)))))
+
+	==&gt; (sumup '(1 33 4 0 3 7))
+	48
+	==&gt; (sumup '(1 0 -1 a 7))
+	a
+</pre>
+</p>
+<p>
+このようにcall/ccで呼び出した関数内で継続を使うことによって，その関数の実行から脱出することができる．
+</p>
+さらに次も大域脱出のために継続を利用した例である．
+<pre>
+	==&gt; (define (read-eval-print)
+	    (display (call/cc 
+		      (lambda (q)
+		        (letrec ((loop 
+				  (lambda (x) 
+				    (if (eq? x 'end)
+				        (q 'bye)
+				        (display (eval x)))
+				    (newline)
+				    (display "# ")
+				    (loop (read)))))
+			  (display "# ")
+			  (loop (read))))))
+	(newline))
+	==&gt; (read-eval-print)
+	# (car '(a b c))
+	a
+	# (+ 3 6)
+	9
+	# end
+	bye
+	==&gt; 
+</pre>
+</div>
+<hr>
+<pre><a href="environment.html">[Prev]</a>    <a href="scheme.html">[ Up ]</a>    <a href="misc.html">[Next]</a></pre>
+
+<hr>
+<div class="footer">
+
+<div align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:24:09 JST 2005
+<!-- hhmts end -->
+</div>
+</div>
+
+</BODY>
+</HTML>

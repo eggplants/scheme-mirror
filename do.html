@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>do式</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<PRE>[Prev]    <A href="recursive.html">[ Up ]</A>    [Next]</PRE>
+<HR>
+
+<div class="main">
+
+<h2>do式</h2>
+<P>
+do式は，同じ式を繰り返し(ループ)実行するための機能を提供する．
+自己末尾再帰呼出しで記述できる関数は，このdo式を用いて再帰呼出しをしない
+形に書き換えることができる．do式の構造は以下の通り．
+<PRE>
+	(do ((<変数1> <初期値1> <ステップ1>)
+	     (<変数2> <初期値2> <ステップ2>)
+             :
+	     (<変数<I>n</I>> <初期値<I>n</I>> <ステップ<I>n</I>>))
+	    (<終了条件> <式e1>  <式e2> … <式e<I>k</I>>)
+	  <式l1>
+	  <式l2>
+	  :
+	  <式l<I>m</I>>)
+</PRE>
+do式では，&lt;変数1&gt;...&lt;変数<I>n</I>&gt;を用いて，&lt;終了条件&gt;が成り立つまで，ループの本体&lt;式l1&gt;...&lt;式l<I>m</I>&gt;を繰り返し評価する．
+</P>
+<P>
+具体的な評価手順は以下の通り．
+<UL>
+<LI> まず&lt;初期値1&gt;...&lt;初期値<I>n</I>&gt;が評価され，対応する各変数に代入される．
+<LI> 次に&lt;終了条件&gt;が評価される．
+<LI> 結果が#fであれば，ループの本体&lt;式l1&gt;...&lt;式l<I>m</I>&gtが順次評価される．
+ループは空(式の個数が0)でもよい．
+<LI> ループの評価が終わると，&lt;ステップ1&gt;...&lt;ステップ<I>n</I>&gt;が評価され，対応する各変数に代入される．
+つまり&lt;ステップ&gt;は，ループごとの変数の更新方法を表す．
+<LI> 次に更新された変数を用いて，再び&lt;終了条件&gt;が評価される．
+結果が#fであれば，上で述べたようなループが繰り返し実行される．
+<LI> &lt;終了条件&gt;の評価が真であれば(#fでなければ)，そのすぐ後ろの式&lt;式e1&gt;...&lt;式e<I>k</I>&gtが評価され，最後の&lt;式e<I>k</I>&gt;の値を返してdo式の評価が終了する．
+式の個数は0でもよいが，その場合のdo式の評価値は仕様上は不定であり，システムの実現方法に依存する．
+</UL>
+</P>
+
+<P>
+累乗を計算する関数をdo式を用いて書けば，以下のようになる．
+<PRE>
+	(define (expt-do x n)
+	  (do ((i 0 (+ i 1))     ;; 局所変数i  : ループ実行の回数を制御する
+	       (y 1))            ;; 局所変数y  : 累乗の途中結果を保存する
+	      ((= i n) y)        ;; 終了条件   : i = nのとき，yを返す
+	      (set! y (* x y)))) ;; ループ本体 : yに，x・yを代入する
+</PRE>
+この例の変数yの節に見られるように&lt;ステップ&gt;は省略可能である．その
+場合には，(&lt;変数&gt; &lt;初期値&gt; &lt;変数&gt;)と書くのと同等の意味
+になる．つまり，一回のループの評価が終わった時点での&lt;変数&gt;の値が次
+のループで使われる．
+</P>
+<p>
+なお，&lt;初期値1&gt;...&lt;初期値<I>n</I>&gt;および&lt;ステップ
+1&gt;...&lt;ステップ<I>n</I>&gt;の評価の順序は，仕様上は不定であり，シス
+テムの実現方法に依存する．
+</p>
+</div>
+<HR>
+<PRE>[Prev]    <A href="recursive.html">[ Up ]</A>    [Next]</PRE>
+
+<div class="footer">
+
+<hr>
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:20:25 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+
+</BODY>
+</HTML>

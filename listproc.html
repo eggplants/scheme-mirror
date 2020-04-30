@@ -1,0 +1,228 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>リスト処理関数</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<PRE><A href="s-expression.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="conditionals.html">[Next]</A></PRE>
+<HR>
+
+<div class="main">
+
+<h2>リスト処理関数</h2>
+<p>
+ここでは，以下に挙げたリストを扱う基本的な関数を説明する．
+<UL>
+<LI>  <a href="#carcdr">car,cdr</a>
+<LI>  <a href="#cons">cons</a>
+<LI>  <a href="#nulletc">null?, list?, pair?</a>
+<LI>  <a href="#set">set-car!, set-cdr!</a>
+<LI>  <a href="#append">append</a>
+<LI>  <a href="#list">list</a>
+</UL>
+</p>
+<H3><a name="carcdr">car,cdr</a></H3>
+<p>
+それぞれリストの<A HREF="s-expression.html#def-s-exp">car部,cdr部</A>を返す関数．
+<PRE>
+	(define x '(1 2 3 4))
+	&gt; (car x)
+	1
+	&gt; (cdr x)
+	(2 3 4)
+</PRE>
+carはリストの先頭の要素，cdrはリストの先頭の要素を除いたリストを返すと考
+えてもよい．これらに加えて，2番目の要素を返すcadr，3番目以降要素を含むリ
+ストを返すcddr，先頭の要素がリストであるときに，その先頭の要素を返すcaar
+などの関数など，4つまでのaかdを含む関数がシステムに用意されている．
+<PRE>
+	&gt; (define x '((1 2 3) 4 5 6))
+	x
+	&gt; (car x)
+	(1 2 3)
+	&gt; (cdr x)
+	(4 5 6)
+	&gt; (cddr x)   ;; = (cdr (cdr x))
+	(5 6)
+	&gt; (cdddr x)  ;; = (cdr (cdr (cdr x)))
+	(6)
+	&gt; (cddddr x) ;; = (cdr (cdr (cdr (cdr x))))
+	()
+	&gt; (cadr x)   ;; = (car (cdr x))
+	4
+	&gt; (caar x)   ;; = (car (car x))
+	1
+	&gt; (cdar x)   ;; = (cdr (car x))
+	(2 3)
+	&gt; (cadar x)  ;; = (car (cdr (car x)))
+	2
+	&gt; (caddar x) ;; = (car (cdr (cdr (car x))))
+	3
+</PRE>
+</p>
+
+<H3><a name="cons">cons</a></H3>
+<p>
+2つの引数をとり，第一引数を<A HREF="s-expression.html#def-s-exp">car部
+</A>，第二引数を<A HREF="s-expression.html#def-s-exp">cdr部</A>にもつリ
+ストを返す関数．システムは新しいconsセルを一つ用意して，そのcar部，cdr部
+がそれぞれ第一，第二引数を指し示すようにする．
+<PRE>
+	&gt; (define x '(1 2 3))
+	x
+	&gt; (define y 0)
+	y
+	&gt; (define z (cons y x))
+	z
+	&gt; z
+	(0 1 2 3)
+	&gt; (car z)
+	0
+	;; 関数eq?は，2つの引数が同じconsセルを指している場合には#tを返す
+	&gt; (eq? (cdr z) x)
+	#t
+	;; 第二引数がアトムである場合の例
+	&gt; (cons 'a 'b)
+	(a . b)
+	;; 第二引数がドット対である場合の例
+	&gt; (cons 'a '(b . c))
+	(a b . c)
+</PRE>
+</p>
+
+<H3><a name="nulletc">null?, list?, pair?</a></H3>
+<p>
+これらは，1つの引数をとり，真偽値を返す<A HREF="predicate.html">述語</A>
+である．
+</p>
+<p>
+<DL>
+<DT> null?
+<DD> 引数が空リスト(null list)かどうかを判定する．
+<PRE>
+	&gt; (null? '())
+	#t
+	&gt; (null? '(a))
+	#f
+</PRE>
+<DT> list?
+<DD> 引数がリストかどうかを判定する．
+<PRE>
+	&gt; (list? 'a)
+	#f
+	&gt; (list? '(a b))
+	#t
+	&gt; (list? '(a . b)) ;; 最後の要素がnullでない場合，list?は#fを返す．
+	#f
+	&gt; (list? '()) ;; 空リストもリストである．
+	#t
+</PRE>
+<DT> pair?
+<DD> 引数が<A HREF="s-expression.html#dottedpair">ドット対</A>かどうかを判定する．
+<PRE>
+	&gt; (pair? 'a)
+	#f
+	&gt; (pair? '(a b))
+	#t
+	&gt; (pair? '(a . b))	
+	#t
+	&gt; (pair? '()) ;; 空リストはアトムであり，ドット対ではない．
+	#f
+</PRE>
+</DL>
+</p>
+
+<H3><a name="set">set-car!, set-cdr!</a></H3>
+<p>
+それぞれ，第一引数にドット対をとり，そのcar部，cdr部を第二引数で指定され
+たデータに置き換える関数である．これらの関数では，既にあるデータを書き換
+えるため，副作用が起きることに注意が必要である．
+</p>
+<p>
+<PRE>
+	&gt; (define x '(1 2))
+	x
+	&gt; (define y '(3 4 5))
+	y
+	&gt; (define z (cons x y))
+	z
+	&gt; z
+	((1 2) 3 4 5)
+	&gt; (set-car! x 0) ;; xのcarを0に置き換える．
+	(0 2)
+	&gt; x
+	(0 2)
+	&gt; z
+	((0 2) 3 4 5)	 ;; zのcarはxであり，zもset-car!の影響を受ける．
+	&gt; (set-cdr! y '(2 1)) ;; yのcdrを(2 1)に置き換える．
+	(3 2 1)
+	&gt; y
+	(3 2 1)
+	&gt; z
+	((0 2) 3 2 1)	 ;; set-car!と同様にこの場合も副作用がある．
+</PRE>
+<div align=center><IMG SRC="images/destructive.gif"></div>
+</p>
+<p>
+(set-cdr! x x)を実行すると，xは無限巡回リストとなり，システムは停止しなくなる．
+<PRE>
+	&gt; x
+	(0 2)
+	&gt; (set-cdr! x x)
+	(0 0 0 0 0 0 0 0 0 0 ..... ;; 強制的に実行を中断しない限り止まらない．
+</PRE>
+<div align=center><IMG SRC="images/endless.gif"></div>
+</p>
+
+<H3><a name="append">append</a></H3>
+<p>
+引数として与えられた(任意個の)リストを連結したリストを返す関数．appendは
+新たなconsセルを用いて，連結されたリストを新たに生成するため，副作用はな
+い．
+<PRE>
+	&gt; (define x '(1 2))
+	x
+	&gt; (define y '(3 4 5))
+	y
+	&gt; (define z '(6 7))
+	z
+	&gt; (append x y z)
+	(1 2 3 4 5 6 7)		
+</PRE>
+</p>
+
+<H3><a name="list">list</a></H3>
+<p>
+引数として与えられた(任意個の)データを並べたリストを返す関数．副作用はない．
+<PRE>
+	&gt; (define x 1)
+	x
+	&gt; (define y '(2 3 4 5))
+	y
+	&gt; (define z '(6 7))
+	z
+	&gt; (list x y z)
+	(1 (2 3 4 5) (6 7))		
+</PRE>
+</p>
+
+</div>
+<HR>
+<PRE><A href="s-expression.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="conditionals.html">[Next]</A></PRE>
+<div class="footer">
+<hr>
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+2017 櫻川貴司<br>
+'(cons x y)の「'」を削除<br>
+<!-- hhmts start -->
+Last modified: Tue Apr 29 23:16:57 JST 2017
+<!-- hhmts end -->
+</DIV>
+</div>
+</BODY>
+</HTML>

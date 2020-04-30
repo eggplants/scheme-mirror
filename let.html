@@ -1,0 +1,173 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>let, let*, letrec</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<PRE><A href="scope.html">[Prev]</A>    <A href="func-var.html">[ Up ]</A>    [Next]</PRE>
+<HR>
+<div class="main">
+
+<h2>let, let*, letrec</h2>
+<p>
+関数内において，何度も繰り返し使うような式があったとき，それが現われるた
+びに逐一計算するのは効率的ではない．計算の途中結果をいったん局所変数に格
+納しておけば，それを再び利用するときには，その局所変数の値を参照するだけ
+でよいことになる．let, let*, letrecは，局所変数(局所関数)を定義するため
+の式である．
+</p>
+
+<H3>let</H3>
+<p>
+let式の構造は以下の通り．
+<PRE>
+	(let ((変数1 初期値1)
+	      (変数2 初期値2)
+	      :
+	      (変数n 初期値n))
+	  式1
+	  式2
+	   :
+	  式m)
+</PRE>
+</p>
+<p>
+まず初期値1...初期値nが順番に評価された後，それぞれの評価値が変数1...変
+数nに代入される．これらの変数を用いて，式1...式mが順に評価される．なお変
+数1...変数nの<A HREF="scope.html#def-scope">スコープ</A>は，let式内部の
+式1...式mである．
+<PRE>
+	(define (dist x1 y1 x2 y2)
+	  (let ((dx (- x1 x2))
+		(dy (- y1 y2)))
+	    (sqrt (+ (* dx dx) (* dy dy)))))
+</PRE>
+let式の中で再びlet式を用いることもできる(let*,letrecでも同様)．
+<PRE>
+	&gt; (define (M x)
+	    (* (let ((x (* x x)))
+	         (+ (let ((x (* x x)))
+		      x)
+		    x))
+	       (+ x 1)))
+	M
+	&gt; (M 2)
+	60
+</PRE>
+それぞれのxのスコープに注意すること．
+Mの引数xで表現すれば，関数Mの返り値は(x^4+x^2)*(x+1)である．
+</p>
+
+<H3>let*</H3>
+<p>
+let*式は，let式と全く同様の構造を持つが，let*の場合はまず初期値1が評価さ
+れると，直ちにその評価値が変数1に代入される．次に初期値2が評価され，変数
+2に代入されるというように，逐次的に代入が行われる．なお変数iのスコープは，
+すぐあとの代入式(変数(i+1) 初期値(i+1))以降のlet*式の内部全てである．つ
+まり初期値(i+1)...初期値nの式には，変数1...変数iを使うことができる．
+<PRE>
+	;; f(x,y) = 1 + (x-y) + (x-y)^2 + (x-y)^3 + (x-y)^4
+	(define (f x y)
+	  (let* ((d (- x y))
+		 (d2 (* d d)))
+	    (+ 1 d d2 (* d d2) (* d2 d2))))
+
+</PRE>
+</p>
+
+<H3>letrec</H3>
+<p>
+再帰的な局所関数を定義するための式である．letrecを使うには，<A
+HREF="lambda.html">lambda式</A>と<A HREF="recursive.html">再帰呼出し</A>
+の概念が必要である．
+<PRE>
+	(letrec ((関数名1 ラムダ式1)
+	         (関数名2 ラムダ式2)
+	         :
+	         (関数名n ラムダ式n))
+	  式1
+	  式2
+	   :
+	  式m)
+</PRE>
+ラムダ式kで記述された関数kが関数名k(要するに変数)に対応づけられる．
+ここで，ラムダ式で記述された各関数のスコープ(関数が呼び出せる範囲)は，関
+数定義部も含めたletrec式全体である．すなわち関数kは，letrec内部の式1...
+式mだけでなく，letrec式内で定義されている全ての関数1...関数nでも利用でき
+る．
+<PRE>
+	;; 数値リストの各要素を2倍する
+	&gt; (define (double-list x)
+	    (letrec ((dlist-iter
+		      (lambda (p q)
+		        (if (null? p)
+			    q
+			    (dlist-iter (cdr p) (append q (list (* 2 (car p)))))))))
+		    (dlist-iter x '())))
+	double-all
+	&gt; (double-all '(1 2 3))
+	(2 4 6)
+</PRE>
+</p>
+
+<H3>letとdefine</H3>
+<p>
+defineを用いても，局所変数・局所関数を定義することは可能である．
+しかし例えば，ある関数<B>f</B>内でdefineを用いた場合，定義された変数・関
+数の<A HREF="scope.html">スコープ</A>は，その関数<B>f</B>の内部全体にな
+る．それに対して，letを用いた場合は，定義した変数・関数のスコープをその
+let式の内部に限定することができる．つまりletの方がより細かく局所変数・局
+所関数のスコープを制御することが可能である．
+<PRE>
+	&gt; (define (f x)
+	    (+ x (let ((x (+ x 3))) (* x x))))
+	f
+	&gt; (f 1)
+	;; (+ 1 (let ((x 4)) (* x x)))
+	;; (+ 1 (* 4 4))
+	17
+	
+	&gt; (define (f x)
+	    (+ (let ((x 4)
+	             (y (+ x 1)))
+	        (* x y)) x))
+	f
+	&gt; (f 1)
+	9
+	&gt; (define (f x)
+	    (+ (let* ((x 4)
+	              (y (+ x 1)))
+	        (* x y)) x))
+	f
+	&gt; (f 1)
+	21
+	&gt; (define (f x)
+	    (define x 4)
+	    (define y (+ x 1))
+	    (+ (* x y) x))
+	f
+	&gt; (f 1)
+	24
+</PRE>
+</p>
+</div>
+<HR>
+
+<PRE><A href="scope.html">[Prev]</A>    <A href="func-var.html">[ Up ]</A>    [Next]</PRE>
+<div class="footer">
+
+<hr>
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:12:21 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+
+</BODY>
+</HTML>

@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>変数のスコープ</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<PRE>[Prev]    <A href="func-var.html">[ Up ]</A>    <A HREF="let.html">[Next]</A></PRE>
+<HR>
+
+<div class="main">
+
+<h2>変数のスコープ --- 局所変数・大域変数</h2>
+
+<p>
+関数の定義
+<PRE>
+	&gt; (define (succ x) (+ x 1))
+	succ
+</PRE>
+の引数(パラメータ)に使われる変数xは、その関数の内部でのみ有効である．
+このような変数を局所変数という．
+<PRE>
+	&gt; (succ 3)
+</PRE>
+によって、関数が呼び出されると、局所変数xに3が割当てられる．
+その後，本体(+ x 1)が，このxの値を使って評価される．
+この局所変数は，関数が評価される際に一時的に用意されるものであって，関数の評価が終わった後にその値を参照することはできない．
+<PRE>
+	&gt; (succ 3)
+	4
+	x
+	&gt; x
+	==&gt; <I>error</I> ;; xは定義されていない
+</PRE>
+この関数succとは別に
+<PRE>
+	&gt; (define (pred x) (- x 1))
+</PRE>
+が定義されていたとしても，関数pred内の局所変数xと関数succの局所変数xは無関係である．
+<PRE>
+	;; (x - 1)(x + 1)
+	&gt; (define (foo x) (* (pred x) (succ x))
+	foo
+	&gt; (foo 5)
+	;; (* (pred 5) (succ 5))
+	;; (* (- 5 1) (succ 5))
+	;; (* 4 (+ 5 1))
+	;; (* 4 6)
+	24
+</PRE>
+</p>
+<p>
+一方，Scheme処理系のプロンプトから直接に
+<PRE>
+	&gt; (define x 100)
+	x
+</PRE>
+のように定義した場合，この定義は，いつでも参照可能である．このような変数を大域変数という．
+<PRE>
+	&gt; x
+	100
+	&gt; (define (f y) (* x y))
+	f
+	&gt; (f 2)
+	200
+	&gt; (set! x -200)
+	-200
+	&gt; (f 2)
+	-400	
+</PRE>
+</p>
+
+<p>
+ある変数が参照できる範囲をその変数の<A NAME="def-scope">スコープ</A>という．
+関数の引数のスコープは，その関数の中のみである．
+大域変数は，常に有効であり，そのスコープは全域である．
+ある大域変数と同じ名前の局所変数があったとき，局所変数のスコープの範囲においては，局所変数の値が有効になる．
+局所変数のスコープを抜けた後は，大域変数が有効になる．
+大域変数の値は，局所変数の値には影響されない．
+<PRE>
+	&gt; (define (bar x) (set! x (succ x)) x)
+	bar
+	&gt; (define x 100)
+	x
+	&gt; (bar 4)
+	5
+	&gt; x
+	100
+	&gt; (set! x (bar x))
+	101
+	&gt; x
+	101
+</PRE>
+また関数のパラメータ以外でも，defineを用いて局所変数を定義することができる．
+<PRE>
+	&gt; (define (f x)
+	    (define y (* x x))
+	    (+ 1 x y))
+	&gt; (f 2)
+	7
+</PRE>
+</p>
+
+<h2><a name="func">局所関数</a></h2>
+<p>
+<PRE>
+	&gt; (define (f x y)
+	    (define (g z)
+	      (* 2 z))
+	    (+ (g x) (g y)))
+</PRE>
+ここで，関数fの内部で定義されている関数gは局所関数であり，関数fの中でのみ有効となる．
+<PRE>
+	&gt; (define (g i) ;; 大域関数g
+	    (+ i 2))
+	&gt; (f 1 2) ;; この中では，局所関数gが有効
+	6
+</PRE>
+</p>
+<p>
+このようにdefineを用いて，局所変数・局所関数を定義することはできるが，一般的には<A HREF="let.html">let,let*,letrec</A>といった式を用いる．
+これは，let式などの方がより柔軟にスコープを制御できるためである．
+</p>
+</div>
+<HR>
+
+<PRE>[Prev]    <A href="func-var.html">[ Up ]</A>    <A HREF="let.html">[Next]</A></PRE>
+
+<div class="footer">
+
+<hr>
+
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:12:27 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+</BODY>
+</HTML>
