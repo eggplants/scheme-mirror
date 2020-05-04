@@ -1,0 +1,128 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>データ</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-2022-JP">
+</HEAD>
+<BODY>
+
+<PRE><A href="func-var.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="eval-quote.html">[Next]</A></PRE>
+
+<HR>
+
+<div class="main">
+
+<H2>データ</H2>
+<p>
+Schemeで扱うデータは，
+<ol>
+<LI> <A NAME="simple">simple data(単純データ)</A>
+<UL>
+<LI> 記号
+<LI> 即値データ --- 真偽値，数値，文字列，文字
+</UL>
+<LI> compound data(複合データ)
+<UL> 
+<LI> リスト
+<LI> ベクトル
+</UL>
+</ol>
+に分けられる．
+これらのデータは，フォーマルには<A HREF="s-expression.html">S式</A>という記法で表現されるものである．
+</p>
+<p>
+<DL>
+<DT> 記号
+<DD> 
+記号とは，その名前によって識別されるデータである．
+例えば関数，変数は，その名前である関数名，変数名という記号で識別されている．
+アルファベットの大文字と小文字は記号の名前としては区別されない．
+記号は対応する一つの<A NAME="external-rep">印字名</A>(たいていのシステムでは名前の中のアルファベットの全てを小文字にしたもの)によって識別される．
+<PRE>
+	&gt; (define abc 3)
+	abc
+	&gt; AbC
+	3
+	&gt; (DefinE deF 1)
+	def
+	&gt; (+ Def aBC)
+	4
+</PRE>
+記号をシステムに与えるには，<A HREF="eval-quote.html#quote">クォート</A>を用いる．
+<PRE>
+	&gt; (quote x)
+	x
+	&gt; (quote a-symbol)
+	a-symbol
+</PRE>
+クォートをしないでシステムに記号名を入力すると，それが表す記号に対応するデータ(変数の値，関数データなど)を参照することになる．
+<PRE>
+	&gt; (define x 1)
+	x
+	&gt; x
+	1  ;; xという印字名をもつ変数の値
+	&gt; a-symbol
+	==&gt; <I>error</I> : unbound variable : a-symbol ;; a-symbolという変数は定義されていない
+</PRE>
+<DT> 即値データ
+<DD> 入力そのものを値とするデータである．
+<DL>
+<DT> 真偽値
+<DD> #t -- true,真(正しい)
+<DD> #f -- false,偽(正しくない)
+<DT> 数値
+<DD> 整数，有理数，実数，複素数<br>
+<DT> 文字列，文字
+<DD> 
+文字列は，<FONT SIZE=+2 COLOR=#0000ff>&quot;</FONT>(ダブルクォーテーション)で囲まれた文字の列．
+文字データは，「#\文字」で表現される．
+</DL>
+<DT> <A NAME="deflist">リスト</A>
+<DD> 
+<PRE>
+	(データ1 データ2 ... )
+</PRE>
+のように括弧でくくられた(あらゆる種類の)データの列である．
+つまり各データが再びリストになっていてもよい．
+<PRE>
+	;; リストの例
+	(1 2 3 4)
+	(a "this is a string" 34 +)
+	(a  b (c (d e) f) g (h) i)
+	;; 中身のない空リスト
+	( )
+</PRE>
+このようにリストは，その定義の中にそれ自体が現われる(再帰的な)構造を持つ．
+またそれぞれのデータを要素と呼ぶ．
+<DT> ベクトル
+<DD> 
+<PRE>
+	#(データ1 データ2 ... )
+</PRE>
+のように表現されるデータ列である．
+表現としてはリストとほぼ同様だが，システム内部での実現方法がリストとは異なる．
+各要素の値の参照についてはベクトルの方が速いが，各要素操作(要素の追加，削除，置換など)に対する柔軟性については，リストの方が優れる．
+一般的にはリストを用いることがほとんどである．
+</DL>
+</p>
+
+</div>
+<HR>
+
+<PRE><A href="func-var.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="eval-quote.html">[Next]</A></PRE>
+
+<div class="footer">
+
+<hr>
+
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:13:54 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+</BODY>
+</HTML>

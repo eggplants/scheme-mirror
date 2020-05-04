@@ -1,0 +1,113 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>クロージャとオブジェクト</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-2022-JP">
+</HEAD>
+<BODY>
+
+<PRE>[Prev]    <A href="environment.html">[ Up ]</A>    [Next]</PRE>
+<HR>
+
+<div class="main">
+
+<h2>クロージャとオブジェクト</h2>
+<P>
+関数本体の定義とそれを評価するための<A HREF="environment.html">環境</A>を合わせてクロージャと呼ぶ．
+クロージャの概念を用いれば，オブジェクト指向プログラミングの基本要素であるオブジェクトを作成することができる．
+</P>
+<P>
+オブジェクトとは，簡単に言えば，メンバ変数(フィールド)といわれるデータとそれを操作するためのメンバ関数(メソッド)をまとめた部品のようなものである．
+各フィールドの<A HREF="scope.html">スコープ</A>はオブジェクト内に局所化され，それらにアクセスするためには必ずメソッドを用いることになる．
+つまりオブジェクト内部のデータは予め指定された方法でのみ操作され，プログラムの他の部分から予期せぬ形で影響を受けることがない．
+こうすることによって，オブジェクトの内部構造がブラックボックス化され，オブジェクトを，ある機能を提供するプログラムの抽象的な部品として，その詳細な実現方法に左右されることなく利用することができるようになる．
+<!-- /P>
+<P -->
+ここでは<A HREF="environment.html">環境モデル</A>を用いて，関数がオブジェクトとして働くことをみる．
+</P>
+<P>
+以下の関数open-accountは，引数balanceをとり，lambda式(関数)を返す．
+<PRE>
+	(define (open-account balance)
+	  (lambda (method amount)
+	    (cond ((eq? method 'withdraw)
+		   (if (>= balance amount)
+		       (set! balance (- balance amount))
+		       (display "insufficient funds ")) ; 画面に文字列を表示
+		   balance)
+		  ((eq? method 'deposit)
+		   (set! balance (+ balance amount))
+		   balance)
+		  (#t (display "no such method : ") ; 画面に文字列を表示
+		      (display method)
+		      (newline)))))
+</PRE>
+ここで，
+<PRE>
+	(define my-acc (open-account 1000))
+</PRE>
+と定義したときの環境は以下のようになる．
+<div align=center><IMG SRC="images/openaccount.gif"></div>
+関数open-accountの引数に1000を与えて呼び出すと，仮引数balanceに実引数1000をバインドしたフレームが新たに作成される．
+これによって定義される環境env1で，関数open-accountの本体が評価される．
+評価されるのはlambda式であり，クロージャが生成される．
+本体は，もちろん関数open-account内で与えられているlambda式であり，環境は，このlambda式が評価された環境，すなわち環境env1である．
+最後にdefineによって，このクロージャがmy-accという名前でグローバルフレームに登録される．
+</P>
+<P>
+my-accは，2つの引数method,amountをとる関数として呼び出すことができる．
+<PRE>
+	&gt; (my-acc 'withdraw 200)  ;; balance 1000 --&gt;  800
+	800
+	&gt; (my-acc 'deposit 500)   ;; balance  800 --&gt; 1500
+	1300
+	&gt; (my-acc 'withdraw 2000) ;; balance 1300 &lt; 2000 
+	insufficient funds 1300
+
+</PRE>
+例えば，最初の式(my-acc 'withdraw 200)を評価するときの環境は以下のようになる．
+<div align=center><IMG SRC="images/withdraw.gif"></div>
+バインドされた引数のフレームの上位環境はグローバルフレームではなく，環境env1つまりmy-accの本体が評価されたときの環境であることに注意．
+環境env2において，以下を評価すると，
+<PRE>
+	    (cond ((eq? method 'withdraw)
+		   (if (>= balance amount)
+		       (set! balance (- balance amount))
+		       (display "insufficient funds "))
+		   balance)
+</PRE>
+変数balanceは環境env1から得られ(1000)，set!によってその値が変更される(800)．
+続いて(my-acc 'deposit 500)を呼び出すと，変数balanceは，800+500 = 1300に変更される．
+</P>
+<P>
+このようにmy-accの定義の時点で作られたフレームは，関数open-accountの呼出し後も捨てられずに残り，それを指す環境があれば，その中の変数の値を調べたり変更したりできる．
+またさらに，
+<PRE>
+	&gt; (define her-acc (open-account 2000))
+</PRE>
+と定義すると，my-accとは全く独立なクロージャが新たに生成される．
+my-accのbalanceとher-accのbalanceは，もちろん別々のフレームに格納される．
+</P>
+<P>
+ところで，この関数open-account(銀行口座の開設)は，balance(残高)というフィールドとamount(金額)を引数としたwithdraw(引出し)，deposit(入金)の2つのメソッドを持つオブジェクトを生成するものである．
+生成されたオブジェクト(my-acc,her-acc)のデータは2つのメソッドを通してのみ変更可能であり，外部(グローバル環境)から直接参照することはできない．
+
+</P>
+</div>
+<HR>
+
+<PRE>[Prev]    <A href="environment.html">[ Up ]</A>    [Next]</PRE>
+
+<hr>
+<div class="footer">
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:23:10 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+</BODY>
+</HTML>

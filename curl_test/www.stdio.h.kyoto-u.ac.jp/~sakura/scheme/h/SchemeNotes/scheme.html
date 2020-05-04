@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<title>Introduction to Scheme Programming Language</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-2022-JP">
+  </head>
+
+<body>
+<h1>Schemeへの道</h1>
+
+<div class="main">
+
+<h2>まえがき</h2>
+<p>
+<a href="https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0%E8%A8%80%E8%AA%9E%E4%B8%80%E8%A6%A7">世の中には様々なプログラミング言語がある</a>が，本文書では，Lispプログラミン
+グ言語の一つの方言であるScheme(スキーム)を紹介する．ここではSchemeを直観
+的に理解することをまず目標として，形式的に完全であるかどうかにはこだわら
+ないことにする．</br>
+※見た目にもあまりこだわらないことにする:-)
+</p>
+
+<p>
+<a name="reference">より詳しくは，</a>
+<ul>
+<li> 湯浅太一 「Scheme入門」 岩波書店
+<li> K.ディヴィグ著 / 村上雅章 訳 「プログラミング言語 SCHEME」 ピアソン・エデュケーション 2000
+<li> 猪股俊光, 益崎真治 「Schemeによる記号処理入門」 森北出版 1994
+<li> D.P.フリードマン, M.フェライセン 著/ 元吉文男, 横山晶一 訳 「Scheme手習い」 マグロウヒル出版 1990
+<li> <a name="sicp">H. Abelson, G.J. Sussman and J. Sussman 著 "<a href="http://mitpress.mit.edu/sicp/">Strucuture and Interpretation of Computer Programs</a>"</a>
+<li> G.J. Sussman, H. Abelson and J. Sussman 著 和田英一訳 計算機プログラムの構造と解釈 第二版 ピアソン・エデュケーション 2000<br>
+(上記の本の第二版の日本語版)
+</ul>
+などの参考書や，WWWのリソース
+<ul>
+<li> 国内
+<ul>
+<li><a href="http://www.sci.u-toyama.ac.jp/~iwao/Scheme/scheme.html">プログラミング言語Scheme</a>
+<li><a href="http://www7b.biglobe.ne.jp/~saia/scheme.html">プログラミング言語Schemeの解説</a>
+</ul>
+<li> 海外
+<ul>
+<li><a href="http://www.schemers.org/">Schemers.org</a>
+<li><a href="http://www.swiss.ai.mit.edu/projects/scheme/index.html">Scheme Homepage</a>
+<li><a href="http://www.swiss.ai.mit.edu/%7Ejaffer/r5rs_toc.html">R<sup>5</sup>RSの英語版</a>
+<li><a href="http://www.cs.cmu.edu/Groups/AI/html/faqs/lang/scheme/top.html">Scheme FAQ</a>
+</ul>
+</ul>
+などを参照するとよい．
+</p>
+<p>
+本文書は，主に上記の文献を参考にして筆者がまとめたものであり，これらの参
+考文献に負うところが大である．特に，「<a href="environment.html">評価環
+境のモデル</a>」と「<a href="closure-object.html">クロージャーとオブジェ
+クト</a>」では，筆者がSchemeを学習し，大いに影響を受けた"<a
+href="#sicp">Structure and Interpretation of Computer Programs</a>"で使
+われている図式のスタイルをそのまま利用しているので，ここにそれを記しておく．
+またその中の例題も同じテーマのものを使わせてもらっている．<br>
+※なお言うまでもないが，本文書に誤りがあれば，それは筆者の誤りである;-)
+</p>
+
+<hr>
+
+
+<h2>もくじ</h2>
+<ol type="1">
+<li><a href="intro.html">はじめのいっぽ</a>
+<li><a href="func-var.html">変数・関数</a>
+<ol type="i">
+<li> <a href="scope.html">変数のスコープ</a>
+<li> <a href="let.html">let, let*, letrec</a>
+</ol>
+<li><a href="datatype.html">データ</a>
+<li><a href="eval-quote.html">フォーム・評価・クォート</a>
+<li> <a href="s-expression.html">S式とconsセル</a>
+<li> <a href="listproc.html">リスト処理関数</a>
+<li><a href="conditionals.html">条件式</a>
+<ol type="i">
+<li> <a href="predicate.html">述語</a>
+</ol>
+<li><a href="recursive.html">再帰呼出し</a>
+<ol type="i">
+<li> <a href="do.html">do式</a>
+</ol>
+<li> <a href="lambda.html">lambda式</a>
+<li> <a href="environment.html">評価環境のモデル</a>
+<ol type="i">
+<li> <a href="closure-object.html">クロージャーとオブジェクト</a>
+</ol>
+<li> <a href="continuation.html">継続</a>
+<li> <a href="misc.html">その他諸々</a>
+<li> <a href="further-reading.html">さらに先へ</a>
+</ol>
+
+<h2>注意</h2>
+<p>
+Schemeの処理系には，さまざまなものがある．
+<pre>
+	elk
+	guile	
+	scm
+	MIT scheme
+	TUT scheme
+	…
+</pre>
+もちろんどのScheme処理系を用いても，数値演算などを実行したときの計算結果
+は同じであるが，変数・関数定義，変数への代入の式に対する返り値は，
+Schemeの仕様書には定められておらず，処理系の実装に委ねられている．
+</p>
+<p>
+本文書においては，多くの実行例を挙げているが，必ずしも1つのScheme処理系
+を想定しておらず，その都度分かりやすい形式でシステムからの応答を表してい
+る．
+</p>
+
+<hr>
+
+<div align="right">
+1998-2005,2017 CopyLeft 日置尋久, 櫻川貴司
+</div>
+
+<hr>
+
+本文書はCopyleftに則り，著作権表示，<a href="#reference">参考文献</a>の
+リストおよびこの但書きを全て変更しないで，添付する場合にのみ再配布可能で
+す．本文の内容を変更した場合は，その変更が明らかになるようにしてください．
+</div>
+<p>リンク切れのリンクを削除・更新。有用なリンクを追加。(2017/4)
+</p>
+<div class="footer">
+    <hr>
+    日置尋久, 櫻川貴司
+<!-- Created: Tue Apr  4 20:34:07 JST 2000 -->
+</div>
+  </body>
+</html>

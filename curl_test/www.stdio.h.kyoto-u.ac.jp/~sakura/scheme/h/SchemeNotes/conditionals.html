@@ -1,0 +1,149 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>条件式</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-2022-JP">
+</HEAD>
+<BODY>
+
+<PRE><A href="listproc.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="recursive.html">[Next]</A></PRE>
+<HR>
+
+<div class="main">
+
+<h2>条件式</h2>
+<p>
+真偽値を返すような式を評価し，その結果次第で異なる式が実行されるような式
+を条件式という．条件の真偽を判定するための式を<A HREF="predicate.html">
+述語(predicate)</A>という．一般に条件式においては，<B>#f</B>以外は全て真
+と扱われる．ここでは，Schemeで使われる代表的な条件式を挙げる．
+</p>
+
+<H3>if</H3>
+<p>
+<PRE>
+	  ;; 差の絶対値を返す関数
+	&gt; (define (asub x y) (if (&lt; x y) (- y x) (- x y)))
+	asub
+	&gt; (asub 1 2)
+	1
+	&gt; (asub -6 -10)
+	4	  
+</PRE>
+条件式<B>if</B>の構造は，以下の通り．
+<PRE>
+	(if &lt;条件&gt; &lt;条件が真のときに実行される式&gt; &lt;条件が偽のときに実行される式&gt;)
+</PRE>
+まず&lt;条件&gt;が評価される．残りの式は，それぞれ条件が真あるいは偽のときのみ実行される．つまり条件に当てはまらない方の式は評価されない．
+<PRE>
+	;; 次のifは，必ず"*"を返す
+	&gt; ((if #f no-such-function *) 3 4)
+	;; (* 3 4)
+	12
+</PRE>
+上でも述べたように，一般に条件式においては<B>#f</B>以外は全て真と扱われる．
+<PRE>
+	&gt; (if 3 0 1)
+	0
+	&gt; (if #f 0 1)
+	1
+	;; 0も#fではないので，真．
+	&gt; (if 0 0 1)
+	0
+</PRE>
+</p>
+
+<H3>cond</H3>
+<p>
+<PRE>
+	&gt; (define (compare x y) 
+		(cond ((&lt; x y) 'smaller)
+		      ((&gt; x y) x 'is 'larger)
+		      (#t 'equal)))
+	compare
+	&gt; (compare 1 2)
+	smaller
+	&gt; (compare 1 1)
+	equal
+</PRE>		    
+条件式<B>cond</B>の構造は，以下の通り．
+<PRE>
+	(cond (&lt;条件1&gt; &lt;式11&gt; &lt;式12&gt;...)
+	      (&lt;条件2&gt; &lt;式21&gt; &lt;式22&gt;...)
+		:
+	      (#t &lt;式<I>n</I>1&gt; &lt;式<I>n</I>2&gt;...))
+</PRE>
+&lt;条件1&gt;，&lt;条件2&gt;...を順番に評価していって，真になる&lt;条件<I>i</I>&gt;を見つけたときに，対応する&lt;式<I>i</I>1&gt;,&lt;式<I>i</I>2&gt;...を順に評価し，最後の式の値を返す．
+</p>
+
+<H3>and</H3>
+<p>
+<PRE>
+	&gt; (and #f #t)
+	#f
+	&gt; (and (= 1 1) (&lt; 1 2))
+	#t
+	&gt; (and (&lt; 0 1) (= 3 3) (&gt; 1 2))
+	#f
+</PRE>
+条件式<B>and</B>の構造は，以下の通り．
+<PRE>
+	(and &lt;式1&gt; &lt;式2&gt;...)
+</PRE>
+&lt;式&gt;を順に評価していって，偽になるものがあれば#fを返す．
+このとき残りの式は評価されないので，論理積とは異なり，式の順序が重要になる．
+全て偽でなかった場合は，最後に評価した式の値を返す．引数が無い場合には，#tを返す．
+<PRE>
+	&gt; (and 0 1 #t 'x '(a b c))
+	(a b c)
+	&gt; (and)
+	#t
+</PRE>
+</p>
+
+<H3>or</H3>
+<p>
+<PRE>
+	&gt; (or #f #t)
+	#t
+	&gt; (or (= 1 1) (&lt; 1 2))
+	#t
+	&gt; (or (&lt; 0 1) (= 3 3) (&gt; 1 2))
+	#t
+	;; notは，引数が#fなら#t，それ以外なら#fを返す．
+	&gt; (or (not (= 1 1)) (eq? 'a 'b))
+	#f	
+</PRE>
+条件式<B>or</B>の構造は，<B>and</B>と同様で以下の通り．
+<PRE>
+	(or &lt;式1&gt; &lt;式2&gt;...)
+</PRE>
+&lt;式&gt;を順に評価していって，真になるものがあればその値を返す．
+このときやはり残りの式は評価されない．
+全て真でなかった場合は，#fを返す．引数が無い場合にも，#fを返す．
+<PRE>
+	&gt; (or 0 1 #t 'x '(a b c))
+	0
+	&gt; (or)
+	#f
+</PRE>
+</p>
+</div>
+<HR>
+<PRE><A href="listproc.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="recursive.html">[Next]</A></PRE>
+
+<div class="footer">
+
+<hr>
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:17:51 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+
+</BODY>
+</HTML>

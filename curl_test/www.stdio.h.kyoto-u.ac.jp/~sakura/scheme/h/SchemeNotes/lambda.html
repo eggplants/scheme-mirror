@@ -1,0 +1,206 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<title>lambda式</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-2022-JP">
+</head>
+<body>
+
+<pre><A HREF="recursive.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A HREF="environment.html">[Next]</A></pre>
+<hr>
+
+<div class="main">
+
+<h2>lambda式</h2>
+
+<p>
+lambda(ラムダ)式は，(名前のない)関数を記述するものである．
+たとえば，ある数に1を加える関数は，lambda式を使って，
+<pre>
+	(lambda (x) (+ x 1))
+</pre>
+と定義できる．lambda式を演算子として引数を与えれば
+<pre>
+	&gt; ((lambda (x) (+ x 1)) 0)
+	1
+</pre>
+のように，関数の値を計算できる．
+これは，通常の関数の呼出しと全く同様である．<br>
+また(名前をもった)新しい関数の定義は，通常<A HREF="func-var.html#define">define</A>を用いて，
+<pre>
+	&gt; (define (succ x) (+ x 1))
+</pre>
+などとするが，実はこれは
+<pre>
+	&gt; (define succ (lambda (x) (+ x 1)))
+</pre>
+のように，lambda式によって記述される関数にdefineで名前を定義することの便
+宜上の省略形式である．なお，一般にこのような便宜的な記法のことをsyntax sugar(文法上の砂糖)という．
+<!-- もちろん，このようにlambda式を使って関数を定義することも可能である．-->
+</p>
+<p>
+lambda式の構造は以下の通り．
+<pre>
+	(lambda 形式引数 式1 式2 .... 式n)
+</pre>
+ここで形式引数は，以下のいずれかである．
+<ol>
+<li> (仮引数1 仮引数2 … 仮引数n)<br>
+n個のパラメータ，仮引数1 … 仮引数nをとる．
+関数に与えたパラメータの数がnと異なるとエラーになる．
+<pre>
+	;; 次の定義は「(define (prec x) (- x 1))」と同じ
+	&gt; (define prec (lambda (x) (- x 1)))
+	prec
+	&gt; (prec 2)
+	1
+	&gt; (prec 1 2)
+	&#8658; ERROR: Wrong number of arguments
+	&gt; (prec)
+	&#8658; ERROR: Wrong number of arguments
+</pre>
+<li> (仮引数1 仮引数2 … 仮引数n . 仮引数n+1) 0 &lt;= n<br>
+仮引数1から仮引数nまでは，必須パラメータであり必ず与えなければならない．
+パラメータがn個より多く与えられた場合，仮引数n+1に余分なパラメータがリストとして渡される．
+<pre>
+	;; 次の定義は「(define (f x y . z) (list x y z))」と同じ
+	&gt; (define f (lambda (x y . z) (list x y z)))
+	f
+	&gt; (f 1 2 3 4 5)
+	(1 2 (3 4 5))
+	&gt; (f 1 2 3)
+	(1 2 (3))
+	&gt; (f 1 2)
+	(1 2 ())
+	&gt; (f 1)
+	&#8658; ERROR: Wrong number of arguments
+</pre>
+<li> 仮引数<br>
+(. 仮引数)と書いても同じ．
+つまり，2.の例で必須パラメータが0個の場合に相当する．
+任意の数のパラメータを取ることができて，それらは一つのリストとして，関数に渡される．
+例えば，組み込み関数listは次のように定義できる(ここでは，mylistという名前を使う)．
+<pre>
+	;; 次の定義は「(define (mylist . x) x)」と同じ
+	&gt; (define mylist (lambda x x))
+	mylist
+	&gt; (mylist 'a 'b '(1 2 3))
+	(a b (1 2 3))
+	&gt; (mylist)
+	()
+</pre>
+</ol>
+</p>
+<p>
+lambda式を使うと，いちいち関数に名前を定義しなくても，関数を別の関数の引
+数に使うことができる．
+<pre>
+	;; 1変数関数f(x)について，f(a)+ ... + f(b)を計算する
+	&gt; (define (sum f a b)
+	    (if (&gt; a b)
+	        0
+	        (+ (f a) (sum f (+ a 1) b))))
+	sum
+	&gt; (sum (lambda (x) (* x x)) 1 5)
+	55 ;; = 1^2 + 2^2 + 3^2 + 4^2 + 5^2
+	&gt; (* 8.0 (sum (lambda (x) (/ 1 (* (- (* 4 x) 3) (- (* 4 x) 1)))) 1 100))
+	3.13659268483882 ;; &#8658;ゆっくりと&#960;に収束する．
+</pre>
+</p>
+<p>
+また関数を返す関数も定義できる．
+<pre>
+	&gt; (define (succ-n n)
+	    (lambda (x) (+ x n)))
+	succ-n
+	&gt; (succ-n 1)
+	#&lt;function&gt; ;; (lambda (x) (+ x 1))という関数
+	&gt; (+ ((succ-n 2) 1) ((succ-n 4) 2))
+	;; (+ ((lambda (x) (+ x 2)) 1) ((lambda (x) (+ x 4)) 2))
+	9
+</pre>
+</p>
+<h2>[参考]lambda式による再帰呼び出し関数</h2>
+<p>
+関数に名前を与えなくても再帰呼び出しを実現することはできる．
+<pre>
+  ;; 2の累乗を計算する関数に引数10を与えた式
+  &gt; (((lambda (f) 
+        ((lambda (m) 
+           (f (lambda (a) ((m m) a))))
+         (lambda (m) 
+           (f (lambda (a) ((m m) a))))))
+        (lambda (r)
+          (lambda (n)
+            (if (= n 0) 
+                1
+                (* 2 (r (- n 1))))))) 10)
+  1024
+</pre>
+この表現に適宜名前を与えると，以下のようにもう少し分かりやすくなる．
+<pre>
+  &gt; (define Y 
+      (lambda (f) 
+        ((lambda (m) 
+           (f (lambda (a) ((m m) a))))
+         (lambda (m) 
+           (f (lambda (a) ((m m) a)))))))
+
+  &gt; (define F
+      (lambda (r)
+        (lambda (n)
+          (if (= n 0) 
+              1
+              (* 2 (r (- n 1)))))))
+
+  &gt; ((Y F) 10)
+  1024
+</pre>
+ここで現れているYに対して，Fのような形で，再帰呼び出し関数の記述を与え
+てやれば，様々な再帰呼び出し関数を同様に表現することができる．
+<pre>
+  &gt; (define D 
+      (lambda (r)
+        (lambda (l)
+          (if (null? l)
+            '()
+            (cons (* 2 (car l)) (r (cdr l)))))))
+  &gt; ((Y D) '(1 2 3))
+  (2 4 6)
+</pre>
+</p>
+<p>
+上で定義した関数は，名前を与えれば，もちろん，ずっと簡潔に表現できる．
+<pre>
+  (define (pow2 n)
+    (if (= n 0)
+        1
+        (* 2 (pow2 (- n 1)))))
+
+  (define (double-list l)
+    (if (null? l)
+        '()
+        (cons (* 2 (car l)) (double-list (cdr l)))))
+</pre>
+</p>
+</div>
+<hr>
+
+<pre><a href="recursive.html">[Prev]</a>    <a href="scheme.html">[ Up ]</a>    <a href="environment.html">[Next]</a></pre>
+
+
+<hr>
+
+<div class="footer">
+<div align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:21:25 JST 2005
+<!-- hhmts end -->
+</div>
+</div>
+
+</body>
+</html>

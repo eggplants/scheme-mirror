@@ -1,0 +1,155 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>変数・関数</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-2022-JP">
+</HEAD>
+<BODY>
+
+<PRE><A href="intro.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="datatype.html">[Next]</A></PRE>
+<HR>
+
+<div class="main">
+
+<h2>変数・関数</h2>
+<p>
+変数とは，様々なデータを格納しておく場所のことで，変数名によって識別される．
+変数にデータを格納することを代入するという．
+新しい変数を用意する(定義する)にはdefineを用いる．
+<PRE>
+	&gt (define x 3)
+	x
+	&gt x
+	3
+	&gt (+ x 3)
+	6
+	&gt (define y (* x 5))
+	y
+	&gt y
+	15
+</PRE>
+変数の値を変更するには，set!を用いる．
+<PRE>
+	&gt x
+	3
+	&gt (set! x (+ x 3))
+	6
+	&gt x
+        6
+</PRE>
+</p>
+
+<H3>関数とその定義</H3>
+<p>
+関数とは，いくつかのデータ(数値，文字列など)を使って，ある計算を行い，その結果を求める一連の作業をまとめたものである．関数へ渡すデータを引数という．求められた結果を関数の値という．
+Schemeでは，新しい関数を用意する(定義する)場合にも，変数の定義と同様に，<A NAME="define">define</A>を用いる．
+<PRE>
+	&gt; (define (plus x y) (+ x y))
+	plus
+</PRE>
+関数への引数は，変数で表現する．関数の本体は，その変数を使って定義される．
+上の例のplusは，x,yという二つの引数をとって，その和を値とする関数である．
+この関数の定義に用いられる引数のことを正式には仮引数という．<br>
+関数を使用することを，一般に関数を呼び出すという．
+また関数呼出しの際に関数に与えられる引数のことを実引数といい，仮引数と区別する．
+例えば，上の関数plusのxとyは仮引数であって，この関数が，
+<PRE>
+	&gt; (plus 3 4)
+	7
+</PRE>
+のように呼び出されるとき，3,4が実引数である．<br>
+仮引数は，関数に実引数が渡されたときに，それぞれの引数を関数の本体の式でどのような名前で参照するかを決めるものであって，仮引数の名前自体は，どのようなものでもよいし，予め定義されていなくてもよい．
+たとえば関数plusを，
+<PRE>
+	&gt; (define (plus first-arg second-arg) (+ first-arg second-arg))
+	plus
+</PRE>
+と定義しても，
+<PRE>
+	&gt; (define (plus x y) (+ x y))
+	plus
+</PRE>
+と全く同じで，第一の引数と第二の引数の和が関数の値となる．
+</p>
+<p>
+引数に使われる変数は，関数の中でのみ参照することができる変数であり，局所変数と呼ばれる．
+<PRE>
+	&gt; (define (plus first-arg second-arg) (+ first-arg second-arg))
+	plus
+	&gt; (plus 1 6)
+	;; 関数内部での動き
+	;;   first-argに1を代入
+	;;   second-argに6を代入
+	;;   (+ first-arg second-arg)を評価する．結果は，7
+	7
+	&gt; first-arg
+	==&gt; <I>error</I> ;; first-argは関数plus内部のみで有効であり，外部では利用できない．
+</PRE>
+それに対して，
+<PRE>
+	&gt; (define y 10)
+	y
+</PRE>
+のように，トップレベルで定義される変数は大域変数と呼ばれ，どこからでも参照できる．
+変数(関数の)有効範囲の詳細については，<A HREF="scope.html">ここ</A>を参照のこと．
+</p>
+<!-- 次のような定義も可能．
+<PRE>
+	&gt; (define plus-func +)
+	plus-func
+	&gt; (plus-func 2 4 5)
+	11
+</PRE -->
+<p>
+変数名・関数名には，Schemeの予約語および'( )'など特殊な例を除けば，ほとんどの文字を使うことができる．
+数字を名前の先頭に使うことも可能(処理系依存)．
+<PRE>
+	&gt; (define &amp;x  -10)
+	&amp;x
+	&gt; &amp;x
+	-10
+	&gt; (define 8&amp;x (* &amp;x 8))
+	8&amp;x
+	&gt; 8&amp;x
+	-80
+</PRE>
+</p>
+<p>
+Schemeでは，条件判定の関数名には，最後に'?'をつけるのが慣例である．
+<PRE>
+	;; 二つの式が同等かどうかの判定
+	&gt; (equal? (+ 1 2) (- 5 2))
+	#t ;; True(真．正しいという意味．この場合 1+2 = 5-2 = 3)
+	;; 二つの文字列の辞書式順序の比較
+	&gt; (string&lt;? "cons" "append")
+	#f ;; False(偽．誤りという意味．この場合，辞書式順序で，"cons" &gt; "append")
+</PRE>
+また何かを変換する関数の名前には，'-&gt;'をつかう．
+<PRE>
+	;; 文字列を数値に変換
+	&gt; (define x (string-&gt;number "124"))
+	x
+	&gt; (equal? x 124)
+	#t
+</PRE>
+</p>
+</div>
+<HR>
+
+<PRE><A href="intro.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="datatype.html">[Next]</A></PRE>
+
+<div class="footer">
+
+<hr>
+
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:10:26 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+</BODY>
+</HTML>

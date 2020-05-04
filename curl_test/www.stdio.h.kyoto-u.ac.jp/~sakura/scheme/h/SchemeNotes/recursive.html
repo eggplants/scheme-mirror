@@ -1,0 +1,223 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE>再帰呼出し</TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-2022-JP">
+</HEAD>
+<BODY>
+
+<pre><A href="conditionals.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="lambda.html">[Next]</A></pre>
+<HR>
+
+<div class="main">
+
+<h2>再帰呼出し</h2>
+
+<p>
+<A HREF="datatype.html#deflist">リスト</A>のように再帰的なデータ構造を扱うには，再帰呼出しを行う関数を用いるのが自然である．
+ここでは，まず数値を扱う関数を例として，再帰呼出しについて説明する．
+</p>
+<P>
+0以上の<I>n</I>に対して，xの<I>n</I>乗は，
+<pre>
+	x^<I>n</I> = 1           <I>n</I> = 0,
+	    = x・x^(<I>n</I>-1)  <I>n</I> &gt; 0
+</pre>
+と定義できる．
+ここで，f(x,<I>n</I>)  = x^nとすると，
+<pre>
+	f(x,0)=1
+	f(x,<I>n</I>)=x*f(x,<I>n-1</I>)
+</pre>
+と書き直すことができる．
+ここで関数fは，関数fによって定義されていることが分かる．
+このようにある関数がそれ自身を呼び出している(それ自身の定義を使っている)ことを再帰呼出しという．
+再帰的に定義されている関数では，再帰呼出しが止まる条件が与えられていなければならない(さもなければ，無限に呼出しが繰り返され，計算が終了しない)．
+またもちろん「再帰呼出しが止まる条件」がいつか成り立つように再帰呼出しが定義されていなければならない．
+例えば，次の関数の計算は<I>n</I>=0以外では終了しない．
+<pre>
+	f(x,0)=1
+	f(x,<I>n</I>)=f(x,<I>n+1</I>)+1, n &gt; 0
+	f(x,<I>n</I>)=f(x,<I>n-1</I>)-1, n &lt; 0
+</pre>
+</P>
+<p>
+xの累乗を計算する関数をSchemeで書けば以下のようになる．
+<pre>
+	(define (expt x n)
+	  (if (= n 0) 
+              1 
+              (* x (expt x (- n 1)))))
+</pre>
+たとえば，(expt 2 4)は，以下のように評価される．
+<pre>
+	&gt; (expt 2 4)
+	;; (* 2 (expt 2 3))
+	;; (* 2 (* 2 (expt 2 2)))
+	;; (* 2 (* 2 (* 2 (expt 2 1))))
+	;; (* 2 (* 2 (* 2 (* 2 (expt 2 0))))
+	;; (* 2 (* 2 (* 2 (* 2 1))))
+	;; (* 2 (* 2 (* 2 2)))
+	;; (* 2 (* 2 4))
+	;; (* 2 8)
+	16
+</pre>
+</p>
+
+<H3><a name="tailrecursion">自己末尾再帰</a></H3>
+<P>
+上の再帰呼出しでは，乗算はその引数の評価が完了するまで行われないため，引数の評価が先に再帰的に行われ，“引数が揃うまで評価が延期されている式”が大量に発生する．またそのため，計算途中で式が膨張する(式が長くなる)．
+このような再帰呼出しは計算の効率という面では好ましくない．
+</P>
+<P>
+このように途中の式が膨張する原因は，再帰呼出しが自分自身と他の演算の組み合わせになっていることにある．
+再帰的な関数を，自分自身のみを呼び出すことで値が得られるような<B>自己末尾再帰呼出し</B>の形で表すことができれば，中間式の膨張を避けることができる．
+</P>
+<p>
+そのためには，計算の進行状況・途中結果を示すような状態変数を導入すればよい．
+xの<I>n</I>乗を自己末尾再帰関数で書き直すと以下のようになる．
+<pre>
+	(define (expt-iter x n)
+	  ;; 局所関数の定義 : expt-iter-auxは，expt-iterの中のみで有効
+	  (define (expt-iter-aux m p)
+	    (if (= m 0) 
+                p 
+                (expt-iter-aux (- m 1) (* x p))))
+	  (expt-iter-aux n 1))
+</pre>
+</p>
+<P>
+expt-iterは，局所関数expt-iter-auxを呼び出す．
+この局所関数が実際に計算を行う関数であり，自己末尾再帰呼出しの形式になっている．
+expt-iter-auxの引数m,pがそれぞれ計算の進行状況，途中結果を表す．
+またこの中でxが現われるが，これはexpt-iterの引数xがそのまま使われる．
+</P>
+<p>
+(expt-iter 2 4)の計算過程は以下のようになる．
+<pre>
+	&gt; (expt-iter 2 4)
+	;; (expt-iter-aux 4 1)
+	;; (expt-iter-aux 3 2)
+	;; (expt-iter-aux 2 4)
+	;; (expt-iter-aux 1 8)
+	;; (expt-iter-aux 0 16)
+	16
+</pre>
+この再帰呼出し(expt-iter-aux m p)の過程で
+<pre>
+	p*2^m = 16
+</pre>
+が常に成立していることに注意．
+自己末尾再帰呼出しで書かれた関数は，<A HREF="do.html">do式</A>を使って，再帰呼出しを使わない形に書き直すこともできる．
+</p>
+
+<H3>リストの再帰的処理</H3>
+<p>
+次にリストを再帰的に処理する例を示す．
+</p>
+<pre>
+        ;; 数値リストxの各要素をn倍したリストを返す関数
+        ;; (x は数値リスト，nは数値であると仮定する)
+        (define (n-times-list x n)
+          (if (null? x)
+              '()
+              (cons (* n (car x)) (n-times-list (cdr x) n))))
+
+	;; 評価の途中経過を含めた実行例
+	&gt; (n-times-list '(1 2 3) 5)
+	;; (cons 5 (n-times-list (2 3) 5))
+	;; (cons 5 (cons 10 (n-times-list (3) 5)))
+	;; (cons 5 (cons 10 (cons 15 (n-times-list () 5))))
+	;; (cons 5 (cons 10 (cons 15 ())))
+	;; (cons 5 (cons 10 (15)))
+	;; (cons 5 (10 15))
+	(5 10 15)
+
+</pre>
+<p>
+リストの再帰的処理では，この例にも現れているように，
+次のような点について考えることが基本となる．
+</p>
+<ul>
+<li> リストが空のとき(<a href="listproc.html#nulletc">null?</a>が#tのとき)に何を返すのか
+<li> リストが空でないときに何を返すのか
+<ul>
+<li> リストのcarをどう処理するのか
+<li> リストのcdrを再帰的にどう処理するのか
+<li> car,cdrに対して行った処理の結果をどうまとめるか
+</ul>
+</ul>
+<p>
+リストを生成する場合には，
+空リストのときには空リストを返して，
+それ以外の場合にはcarを処理して，cdrを再帰的に処理して，
+それらの結果<a href="listproc.html#cons">cons</a>を使ってまとめるのが基本パターンとなる．
+</p>
+
+<H3>trace,untrace</H3>
+
+<p>
+関数traceを使うことによって，関数の呼出しの状況と返り値を見ることができる．
+<pre>
+        ;; scmの場合
+        ==&gt; (trace expt)
+        ==&gt; (expt 2 4)
+        CALL expt 2 4
+         CALL expt 2 3
+          CALL expt 2 2
+           CALL expt 2 1
+            CALL expt 2 0
+            RETN expt 1
+           RETN expt 2
+          RETN expt 4
+         RETN expt 8
+        RETN expt 16
+        ;Evaluation took 0 mSec (0 in gc) 613 cells work, 2299 env, 464 bytes other
+        16
+        ==&gt;
+</pre>
+複数の関数を同時にtraceすることもできる．
+<pre>
+        ==&gt; (define (f x n) (if (= n 0) 1 (* x (g x (- n 1)))))
+        ==&gt; (define (g x n) (if (= n 0) 1 (+ x (f x (- n 1)))))
+        ==&gt; (trace f)
+        ==&gt; (trace g)
+        CALL f 2 5
+         CALL g 2 4
+          CALL f 2 3
+           CALL g 2 2
+            CALL f 2 1
+             CALL g 2 0
+             RETN g 1
+            RETN f 2
+           RETN g 4
+          RETN f 8
+         RETN g 10
+        RETN f 20
+        ;Evaluation took 0 mSec (0 in gc) 423 cells work, 2005 env, 784 bytes other
+        20
+        ==&gt;
+</pre>
+関数untraceを使えば，traceを行わないようになる．
+</p>
+
+</div>
+<HR>
+
+<pre>
+<A href="conditionals.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="lambda.html">[Next]</A>
+</pre>
+
+<div class="footer">
+
+<div align="right">
+1998-2005 CopyLeft 日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:19:40 JST 2005
+<!-- hhmts end -->
+</div>
+</div>
+</BODY>
+</HTML>

@@ -1,0 +1,188 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+<HEAD>
+  <link rel="stylesheet" href="../style.css" type="text/css">
+<TITLE> その他諸々 </TITLE>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-2022-JP">
+</HEAD>
+<BODY>
+
+<PRE><A href="continuation.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="further-reading.html">[Next]</A></PRE>
+<HR>
+
+<div class="main">
+
+<h2>その他諸々</h2>
+
+<H3>apply</H3>
+<p>
+<PRE>
+	(apply proc 引数1 … 引数n)
+</PRE>
+引数1 … 引数nを使って，procに
+<PRE>
+	(append (list 引数1 … 引数n-1) 引数n)
+</PRE>
+を引数として与えた式
+を評価する．引数nはリストでなければならない．
+<PRE>
+	==&gt; (apply + '(3 4))
+	7
+	==&gt; (define (generate-interval x y)
+	    (if (&gt; x y) '()
+	        (cons x (generate-interval (+ x 1) y))))
+	generate-interval
+	==&gt; (define (g f x y)
+	    (apply f (generate-interval x y)))
+	g
+	==&gt; (g + 1 10) ;; 1 + 2 + ... + 10
+	55
+	==&gt; (g * 1 10) ;; 10!
+	3628800
+</PRE>
+</p>
+
+<H3>map</H3>
+<p>
+map関数は，n引数の手続きprocと，n個のリストをとる．
+<PRE>
+	(map proc リスト1 … リストn)
+</PRE>
+リストが2つ以上の場合，各リストは同じ長さでなければならない．
+map関数は，各リストの先頭から順にそれぞれ一つずつ要素を調べて，n引数手続きprocを評価し，結果をリストにして返す．
+つまり，返されるリストの<I>i</I>番目の要素(1&lt; <I>i</I> &lt;n)は，map関数に与えられた各リストの<I>i</I>番目の要素に対して，procを適用した結果になる．
+<PRE>
+	==&gt; (map cons '(a b c d) '(1 2 3 4))
+	((a . 1) (b . 2) (c . 3) (d . 4))
+	==&gt; (define (norm2 x)
+	    (apply + (map (lambda (y) (* y y)) x)))
+	norm2
+	==&gt; (norm2 '(1 3 4))
+	26
+</PRE>
+</p>
+ 
+<h3>逐次実行</h3>
+<p>
+複数の式を順次実行するには，<B>begin</B>を用いる．
+<PRE>
+	(begin 式1 式2 … 式m)
+</PRE>
+最後の式の値が返される．
+<PRE>
+	==&gt; (define y 0)
+	y
+	==&gt; (define (foo a b c)
+  	    (if (= c 0)
+	      (begin (set! y a) (* a b))   
+	      (begin (set! y b) (+ a b))))
+</PRE>
+</p>
+
+<h3>端末に対する入出力</h3>
+<p>
+<DL>
+<DT> <B>read</B>
+<DD> キーボードからschemeの式を1つ読み込む．式そのものを返す．
+つまりquoteされた式を返すと考えればよい．
+<PRE>
+	;; endが入力されるまで，キーボードから読み込んで，読み込まれた式の評価値を合計する．
+	==&gt; (define (read-add)
+	    (do ((x (read) (read))
+	         (y 0))
+	        ((eq? 'end x) y)
+	      (set! y (+ y (eval x))))) ;;evalは，引数を評価する関数
+	read-add
+	==&gt; (read-add)
+	(+ 1 2)
+	(* 3 4)
+	5
+	end
+	20
+</PRE>
+<DT> <B><a name="display">write,display</a></B>
+<DD> どちらも1引数関数で，引数を端末の画面に表示する．
+改行は行わない．
+writeは，引数をそのまま出力する．
+文字列が与えられた場合は，二重引用符・エスケープ文字も含めて出力する．
+displayは，文字列が与えられた場合，二重引用符・エスケープ文字を外して出力する(文字列内で二重引用符を用いるにはバックスラッシュをエスケープ文字として『\"』と書く．バックスラッシュ自体を表すには『\\』と書く)．
+<PRE>
+	;; scmの場合 ※(verbose 1)実行後
+	==&gt; (write 'a)
+	a#&lt;unspecified&gt; ;; #&lt;unspecified&gt;は，writeの返り値(不定という意味)
+	==&gt; (write '(1 2 3))
+	(1 2 3)#&lt;unspecified&gt;
+	==&gt; (define msg &quot;\&quot;\\\&quot; : this is backslash.&quot;)
+	#&lt;unspecified&gt;
+	==&gt; (write msg)
+	&quot;\&quot;\\\&quot; : this is backslash.&quot;#&lt;unspecified&gt;
+	==&gt; (display msg)
+	&quot;\&quot; : this is backslash.#&lt;unspecified&gt;
+	==&gt; (begin (display msg) (display #\newline) '())
+	&quot;\&quot; : this is backslash.
+	()
+</PRE>
+<DT> <B><a name="newline">newline</a></B>
+<DD> 改行を行う関数
+</DL>
+</p>
+
+<h3>ファイルに対する入出力</h3>
+<p>
+上で挙げた<B>read, write, display, newline</B>に，引数としてポートを渡す
+と，そのポートを介して，ファイルに対して入出力を行うことができる．ポート
+とは，ファイルなど(端末も含む)と処理系を結び付ける橋渡しを行うものである．
+入出力関数をポート引数を省略して呼び出した場合は，デフォルトポートへの入
+出力を行うことになる．処理系が起動された初期状態では，デフォルト入出力ポー
+トは端末(キーボードとディスプレイ)になっている．
+<UL>
+<LI> <B>call-with-input-file, call-with-output-file</B><br>
+いずれもファイル名(文字列)と1引数関数をとる．
+この関数への引数はファイルを表すポートであり，このポートに対してread/writeを行うことにより，ファイルに対する処理が行われる．
+<PRE>
+	;; ファイルを読み込んで式を評価する = システム関数load
+	(define (myload file)
+	  (define (eval-file port)
+	    (do ((x (read port) (read port))
+		 (y '())
+		 (i 0 (1+ i)))
+		((eof-object? x) y) ;; fileの終わりは，eof-object?という述語で判定する．
+	      (set! y (eval x))))
+	  (call-with-input-file file eval-file))
+
+	;; listをファイルに書き出す
+	(define (output-list datalist file)
+	  (define (output-list-aux port)
+	    (do ((x datalist (cdr x)))
+		((null? x) '())
+	      (write (car x) port)
+	      (newline port)))
+	  (call-with-output-file file output-list-aux))
+</PRE>
+<LI> <B>with-input-from-file, with-output-to-file</B><br>
+いずれもファイル名(文字列)と引数なしの関数をとる．
+関数を評価している間は，指定されたファイルのポートがデフォルトポートとなる．
+<LI> <B>open-input-file, open-output-file, close-input-port,close-output-port</B><br>
+open-*-fileは，ファイルを開いてポートと結び付ける関数．close-*-portは，ファイルを閉じる関数．
+ファイルからの入出力を行うには，まずファイルを開く必要がある．
+また処理が終わったファイルは必ず閉じなければならない．
+上で挙げたcall-with-input-file,with-input-from-fileなどの関数では，内部でこれらの処理を行っているので，プログラマはファイルのopen/closeをする必要がない．
+</UL>
+</p>
+</div>
+<HR>
+
+<PRE><A href="continuation.html">[Prev]</A>    <A href="scheme.html">[ Up ]</A>    <A href="further-reading.html">[Next]</A></PRE>
+
+<HR>
+<div class="footer">
+<DIV align="right">
+1998-2005 CopyLeft  日置 尋久<br>
+<!-- hhmts start -->
+Last modified: Tue Mar 29 23:24:58 JST 2005
+<!-- hhmts end -->
+</DIV>
+</div>
+</BODY>
+</HTML>
